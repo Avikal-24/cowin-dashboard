@@ -1,0 +1,228 @@
+<%- include('partials/head') %>
+
+
+    <div id="alerts">
+
+    </div>
+    <div class="container">
+        <h1 class="display-4 text-center my-4">Vaccine Centers of District ID <%= district_id %>
+        </h1>
+
+        <div class="input-group mb-3">
+            <!-- <label for="date">Enter Date whose slots you wish to find: </label> -->
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon3">Enter Date for which you want to find slots:</span>
+            </div>
+            <input id="date" type="date" class="form-control" placeholder="Enter Date whose slots you wish to find">
+            <div class="input-group-append">
+                <button id="btn" class="btn btn-secondary" type="button">Get Slots</button>
+            </div>
+        </div>
+
+        <!-- <div class="jumbotron jumbotron-fluid">
+                <div class="container">
+                  <p  class="lead">This is a modified jumbotron that occupies the entire horizontal space of its parent.</p>
+                </div>
+              </div> -->
+
+        <div id="para">
+
+        </div>
+
+
+        <!-- <button id="btn" class="btn btn-dark">Get Slots</button> -->
+        <!-- <input type="date" class="form-control my-4" id="date" /> -->
+
+        <table id="dtBasicExample" class="my-4 table table-striped table-bordered table-sm" cellspacing="0"
+            width="100%">
+            <thead>
+                <tr>
+                    <th class="th-sm">Center ID
+                    </th>
+                    <th class="th-sm">Center Name
+                    </th>
+                    <th class="th-sm">Block Name
+                    </th>
+                    <th class="th-sm">PinCode
+                    </th>
+                    <th class="th-sm">Slots
+                    </th>
+                    <th class="th-sm">Vaccine Available
+                    </th>
+                    <th class="th-sm">Fee type
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th class="th-sm">Center ID
+                    </th>
+                    <th class="th-sm">Center Name
+                    </th>
+                    <th class="th-sm">Block Name
+                    </th>
+                    <th class="th-sm">PinCode
+                    </th>
+                    <th class="th-sm">Slots
+                    </th>
+                    <th class="th-sm">Vaccine Available
+                    </th>
+                    <th class="th-sm">Fee type
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+
+
+    </div>
+
+    <%- include('partials/footer') %>
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <!-- <script src="vaccine.js"></script> -->
+    <script>
+        async function fetchAPI(input_date) {
+            // let district_id = "512"
+            let district_id = "<%= district_id %>"
+            console.log(district_id)
+            let fetch_date = new Date()
+            // let curr_date = `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`
+            //  fetch_date = "31-03-2021"
+            console.log(`date is ${input_date.value}`)
+            if (input_date.value) {
+                fetch_date = new Date(input_date.value)
+            }
+            console.log(`fetch_date is ${fetch_date.getMonth() + 1}`)
+            let use_date = `${fetch_date.getDate()}-${fetch_date.getMonth() + 1}-${fetch_date.getFullYear()}`
+            let url = `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id=${district_id}&date=${use_date}`
+            try {
+
+                console.log(url)
+                let response = await fetch(url);
+                return await response.json();
+            } catch (err) {
+                console.log(err)
+            }
+
+        }
+
+        async function display(input_date) {
+
+            let data = await fetchAPI(input_date);
+            console.log(data);
+            console.log(data.sessions);
+            let tbody = document.getElementsByTagName('tbody')
+            data.sessions.forEach(session => {
+
+                let slots = ''
+                session.slots.forEach(slot => {
+                    slots += slot
+                    slots += ', '
+                })
+
+                slots = slots.substring(0, slots.length - 2);
+
+                console.log(slots)
+
+                htmlSegment = `<tr>
+                               <td>${session.center_id}</td>
+                               <td>${session.name}</td>
+                               <td>${session.block_name}</td>
+                               <td>${session.pincode}</td>
+                               <td>${slots}</td>
+                               <td>${session.vaccine}</td> 
+                               <td>${session.fee_type}</td>   
+                               </tr > `
+                console.log(session.session_name)
+                console.log(session.session_id)
+                tbody[0].innerHTML += htmlSegment
+            });
+            console.log(tbody)
+            if (tbody[0].innerText == '') {
+                console.log("No slots!")
+                let alert = document.getElementById('alerts')
+
+                if (input_date.value !== '') {
+                    // input_date.value=new Date()
+                    // alert_date=input_date.value
+                    alert.innerHTML += `<div class="alert alert-warning alert-dismissible fade show" role="alert" style="padding:1rem 2rem">
+  <strong>Hey!</strong> No slots available for the date ${input_date.value}. Please look for some other date.
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>`
+                }
+                else {
+                    let alert_date = new Date()
+                    // console.log(`alert_date= ${alert_date}`)
+                    alert.innerHTML += `<div class="alert alert-warning alert-dismissible fade show" role="alert" style="padding:1rem 2rem">
+  <strong>Hey!</strong> No slots available for the today ${alert_date.getDate()}-${alert_date.getMonth() + 1}-${alert_date.getFullYear()}. Please look for some other date.
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>`
+
+                }
+
+
+            }
+            else {
+                let para = document.getElementById('para')
+                if (input_date.value) {
+
+                    console.log('if block:' + input_date.value)
+                    para.innerHTML += `<p  class="lead my-4 text-center" style="background-color:#e9ecef; padding:2rem 2rem">
+                Hi User! Here are the vaccination centers and slots available in the selected district for the date ${input_date.value}. Do get vaccinated!</p>`
+                }
+                else {
+                    let today = new Date();
+                    console.log('else block:' + today)
+                    para.innerHTML += `<p  class="lead my-4 text-center" style="background-color:#e9ecef; padding:2rem 2rem">
+                Hi User! Here are the vaccination centers and slots available in the selected district for the date ${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}. Do get vaccinated!</p>`
+
+                }
+            }
+
+        }
+
+        let state_id = "<%= state_id %>"
+        let nav = document.getElementById('nav')
+        nav.innerHTML = ''
+        nav.innerHTML += `<li class="breadcrumb-item" aria-current="page"><a href='/'>Home</a></li><li class="breadcrumb-item"><a href='/${state_id}'>Districts</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Slots</li>`
+
+        let btn = document.getElementById('btn')
+
+        let date = document.getElementById('date')
+        display(date)
+
+        btn.addEventListener('click', () => {
+            let tbody = document.getElementsByTagName('tbody')
+            tbody[0].innerHTML = ''
+            let para = document.getElementById('para')
+            para.innerHTML = ''
+            let alert = document.getElementById('alerts')
+            alert.innerHTML = ''
+            let input_date = document.getElementById('date')
+            display(input_date)
+        })
+
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+    </body>
+
+    </html>
